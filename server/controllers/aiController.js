@@ -3,6 +3,7 @@ import sql from "../configs/db.js";
 import { clerkClient } from "@clerk/express"
 import {v2 as cloudinary} from 'cloudinary'
 import axios from "axios";
+import FormData from 'form-data';
 import fs from "fs";
 import pdf from "pdf-parse/lib/pdf-parse.js";
 
@@ -147,27 +148,26 @@ export const generateImage = async(req,res) =>{
 export const removeImageBackground = async(req,res) =>{
     try {
         const{userId} = req.auth();
-        const {image} = req.file;
+        const image = req.file;
         const plan=req.plan;
 
         if(plan !== 'premium'){
             return res.json({sucess: false, message: "This feature is only available for premium subscriptions"})
         }
 
-         const { secure_url } = await cloudinary.uploader.upload(image.path, {
+        const {secure_url}=await cloudinary.uploader.upload(image.path,{
             transformation: [
-              {
-                effect: "background_removal",
-                background_removal: "remove_the_background",
-              },
-            ],
-          });
+                {
+                    effect: 'background_removal',
+                    background_removal: 'remove_the_background'
+                }
+            ]
+        })
 
         await sql`INSERT INTO creations (user_id, prompt, content, type)
-        VALUES(${userId}, 'Remove background from image', ${secure_url}, 'image')`;
+        VALUES(${userId},'Remove background from image', ${secure_url}, 'image')`;
 
         res.json({success: true,content:secure_url})
-
     } catch (error) {
         console.log(error.message);
         res.json({success: false, message: error.message})
@@ -177,8 +177,8 @@ export const removeImageBackground = async(req,res) =>{
 export const removeImageObject = async(req,res) =>{
     try {
         const{userId} = req.auth();
-        const {object} = req.auth()
-        const {image} = req.file;
+        const object = req.body.object;
+        const image= req.file;
         const plan=req.plan;
 
         if(plan !== 'premium'){
