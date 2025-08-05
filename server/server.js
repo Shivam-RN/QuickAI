@@ -8,7 +8,7 @@ import userRouter from './routes/userRoutes.js'
 
 const app = express()
 await connectCloudinary()
-const PORT = process.env.PORT
+const PORT = 3000
 
 app.use(cors())
 app.use(express.json())
